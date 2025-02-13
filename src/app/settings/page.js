@@ -1,41 +1,54 @@
-import React from 'react';
+"use client";
+import { useRouter } from 'next/navigation';
 import BottomNavBar from '../components/BottomNavBar';
-import { FaUser, FaLock, FaBell, FaSave, FaBatteryHalf, FaLaptop, FaGlobe, FaQuestionCircle, FaDice, FaHandshake, FaMobileAlt } from 'react-icons/fa';
+import {
+  FaUser,          // Account
+  FaBell,          // Notification and Sounds
+  FaMobileAlt,     // Devices
+  FaGlobe,         // Language
+  FaQuestionCircle,// Ask Question
+  FaInfoCircle,    // Tankwa FAQ
+  FaUserPlus,      // Invite Friends
+} from 'react-icons/fa';
 
-const SettingsPage = () => {
-  const sections = [
-    { id: 1, title: 'Account', icon: <FaUser /> },
-    { id: 2, title: 'Privacy and Security', icon: <FaLock /> },
-    { id: 3, title: 'Notification and Sounds', icon: <FaBell /> },
-    { id: 4, title: 'Data and Storage', icon: <FaSave /> },
-    { id: 5, title: 'Power Saving', icon: <FaBatteryHalf /> },
-    { id: 6, title: 'Devices', icon: <FaLaptop /> },
-    { id: 7, title: 'Language', icon: <FaGlobe /> },
-    { id: 8, title: 'Ask Question', icon: <FaQuestionCircle /> },
-    { id: 9, title: 'Lucky Me FAQ', icon: <FaDice /> },
-    { id: 10, title: 'Invite Friends', icon: <FaHandshake /> }, // New section
-    { id: 11, title: 'Lucky Me Features', icon: <FaMobileAlt /> }, // New section
-  ];
+const settingsList = [
+  { id: 1, title: 'Account', icon: <FaUser className="inline-block mr-4" /> },
+  { id: 3, title: 'Notification ', icon: <FaBell className="inline-block mr-4" /> },
+  { id: 6, title: 'Devices', icon: <FaMobileAlt className="inline-block mr-4" /> },
+  { id: 7, title: 'Language', icon: <FaGlobe className="inline-block mr-4" /> },
+  { id: 8, title: 'Ask Question', icon: <FaQuestionCircle className="inline-block mr-4" /> },
+  { id: 9, title: 'Tankwa FAQ', icon: <FaInfoCircle className="inline-block mr-4" /> },
+  { id: 10, title: 'Invite Friends', icon: <FaUserPlus className="inline-block mr-4" /> },
+];
+
+export default function Settings() {
+  const router = useRouter();
+
+  const handleNavigation = (id) => {
+    // Redirect to different pages for each section
+    router.push(`/settings/${id}`);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-gray-800 mb-6">Settings</h1>
-      <div className="bg-white rounded-lg shadow-md">
-        {sections.map((section, index) => (
-          <div
-            key={section.id}
-            className={`flex items-center p-4 cursor-pointer hover:bg-gray-50 ${
-              index < sections.length - 1 ? 'border-b' : ''
-            }`}
-          >
-            <span className="text-2xl mr-4 text-[#85726a] ">{section.icon}</span>
-            <span className="text-lg font-medium text-gray-700">{section.title}</span>
-          </div>
-        ))}
+    <div className="min-h-screen bg-gradient-to-r bg-white flex items-center justify-center py-12 px-6">
+      <div className="w-full max-w-3xl bg-white rounded-lg shadow-2xl p-8">
+        <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">Settings</h1>
+        <ul className="space-y-6">
+          {settingsList.map((setting) => (
+            <li
+              key={setting.id}
+              className="p-6 bg-gradient-to-r bg-blue-300 rounded-lg cursor-pointer transform hover:scale-105 hover:shadow-xl hover:bg-blue-500 hover:text-white transition-all duration-300 ease-in-out"
+              onClick={() => handleNavigation(setting.id)}
+            >
+              <div className="flex items-center">
+                {setting.icon} {/* Render the icon */}
+                <span className="text-xl font-semibold text-gray-800">{setting.title}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
       <BottomNavBar />
     </div>
   );
-};
-
-export default SettingsPage;
+}

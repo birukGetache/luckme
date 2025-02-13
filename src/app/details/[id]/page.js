@@ -2,9 +2,14 @@
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import BottomNavBar from '@/app/components/BottomNavBar';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Link from 'next/link';
+import { FaArrowLeft } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
 import { selectCard } from '../../../../redux/counterSlice';
+import { useParams } from 'react-router-dom';
+import Image from "next/image";
 const DetailPage = () => {
   const pathname = usePathname(); // Get the current path of the page
   const id = pathname.split("/").pop(); // Extract the `id` from the URL path
@@ -13,22 +18,88 @@ const DetailPage = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State for menu toggle
   const [activePage, setActivePage] = useState('service'); // State to toggle between Service and Detail
   const cardData = [
-    { id: 1, title: "Night Stay", description: "5-star hotel with children" },
-    { id: 2, title: "Day Stay", description: "5-star hotel with children" },
-    { id: 3, title: "Weekend Stay", description: "5-star hotel with children" },
-    { id: 4, title: "Add Student", description: "Add a new student to the system" },
-    { id: 5, title: "Bag and Pen", description: "Essential items for your trip" },
-    { id: 6, title: "Late Home Rental Price", description: "Price for late home rental" },
-    { id: 7, title: "Medicine", description: "Medicines available for purchase" },
+    {id:1, title: "Gonder", description: `5-star hotel with children, chosen `,url:"/gonder.avif" },
+    {id:2, title: "Gorgora ", description: `5-star hotel with children, chosen`,url:"/Dembiya.jpg" },
+    {id:3, title: "Dembiya", description: `5-star hotel with children, chosen`,url:"/Dembiya.jpg" },
+    {id:4, title: " Hamusit", description: "Add a new student to the system" ,url:"/Hamusit.jpg"},
+    {id:5, title: "Fogera", description: "Essential items for your trip" ,url:"/gonder.avif"},
+    {id:6, title: "Bahita", description: "Price for late home rental" ,url:"/gonder.avif"},
+    {id:7, title: "Dek deset", description: "Medicines available for purchase",url:"/gonder.avif" },
   ];
+ const [first_name, setFirstName] = useState("");
+  const [last_name , setLastName] = useState("");
+  const [email, setEmail ]=useState("")
+  const [phone , setPhone] = useState("");
+  const [amount , setAmount] = useState(100);
+  const [card , setCard] = useState({});
+  const sanitizedEmail = email.replace(/[^a-zA-Z0-9._-]/g, ''); // Remove invalid characters from email
+  const tx_ref = `${sanitizedEmail}-txburusdf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  
+  const public_key = 'CHAPUBK_TEST-XQxA1FKglJqifPTKFg1jBlNKYqHBlAgL'
+    const triggerConfetti = () => {
+        confetti({
+          particleCount: 50, // Lower the number of particles
+          angle: 90,
+          spread: 50, // Reduce spread
+          origin: { x: 0.5, y: 0.5 },
+          colors: ['#ff0', '#ff6', '#ff8000', '#ff4d4d'],
+        });
+      };
 
-  const handleBidNow = () => {
-    dispatch(selectCard(cardDetail)); // Dispatch the selected card to the Redux store
-       if (!localStorage.getItem('selectedCard')) {
-          localStorage.setItem('selectedCard', JSON.stringify(null)); // or set a default card ID if needed
-        }
-        handleCardSelect(cardDetail.id)
+      useEffect(()=>{
+      setCard(cardData.find((card) => card.id === parseInt(id)))
+      
+      },[id])
+  const [formData, setFormData] = useState({
+    nationality: '',
+    passportNumber: '',
+    email: '',
+    phoneNumber: '',
+    departureLocation: '',
+    destinationLocation: '',
+    preferredDate: '',
+    numberOfPassengers: 1,
+    typeOfTransport: '',
+    paymentMethod: '',
+    currency: 'USD',
+    specialNeeds: '',
+    accessibilityNeeds: '',
+    foodPreferences: '',
+    petInfo: '',
+  });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
   };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    console.log(formData); // Here, you can send the data to your backend or API
+  };
+
+
+  const validatePhone = (phone) => {
+    const phoneRegex = /^09\d{8}$/;
+    return phoneRegex.test(phone);
+  };
+  
+  const handleBidNow = () => {
+    if (!email || !phone) {
+      toast.error("Please fill in either email or phone number.");
+    } else if (phone && !validatePhone(phone)) {
+      toast.error("Please enter a valid phone number starting with '09' followed by 8 digits.");
+    } else {
+      dispatch(selectCard(cardDetail)); // Dispatch the selected card to the Redux store
+      if (!localStorage.getItem('selectedCard')) {
+        localStorage.setItem('selectedCard', JSON.stringify(null));
+      }
+      handleCardSelect(cardDetail.id);
+    }
+  };
+  
   const handleCardSelect = (cardId) => {
     // Save the selected card ID to localStorage
     localStorage.setItem('selectedCard', JSON.stringify(cardId));
@@ -56,124 +127,267 @@ const DetailPage = () => {
   }
 
   return (
-    <div className="p-4 space-y-6 bg-yellow-50 font-playfair text-[#85726a]">
-      {/* Hamburger Icon */}
-      <div className="absolute border-none top-4 right-4">
-        <button onClick={toggleMenu} className="text-2xl border-none ">
-          {isMenuOpen ? (
-            <i className="fas fa-times"></i> // Close icon
-          ) : (
-            <i className="fas fa-bars"></i> // Hamburger icon
-          )}
-        </button>
-      </div>
+    <div className=" space-y-6 bg-white font-playfair text-[#85726a]">
 
-      {/* Menu - Conditional display based on isMenuOpen */}
-      {isMenuOpen && (
-        <div className="absolute top-16 right-4 bg-white p-4 shadow-lg rounded-md">
-          <div className="space-y-2">
-            <button
-              onClick={() => goToPage('service')}
-              className="text-lg text-[#85726a]  border-none rounded-xl hover:text-blue-500 "
-            >
-              Service
-            </button><br></br>
-            <button
-              onClick={() => goToPage('detail')}
-              className="text-lg text-[#85726a] border-none  rounded-xl hover:text-blue-500"
-            >
-              Detail
-            </button>
-          </div>
-        </div>
-      )}
+      
 
       {/* Back to Home Link */}
-      <p>
-        <Link href="/" passHref className="text-[#85726a]">
-          Back to Home
-        </Link>
-      </p>
+     
 
       {/* Content: Conditional rendering of Service or Detail */}
-      {activePage === 'service' ? (
-        <div className='bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out'>
-          <h2 className="text-3xl font-bold">{cardDetail.title}</h2>
-          <p className="text-lg">{cardDetail.description}</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-            {/* Card 1 */}
-            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
-              <h3 className="text-xl font-semibold text-[#85726a] mb-4">Start Date</h3>
-              <p className="text-[#85726a]">ሐሙስ, ግንቦት 15, 2016 / Thursday, May 23, 2024</p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
-              <h3 className="text-xl font-semibold text-[#85726a] mb-4">End Date</h3>
-              <p className="text-[#85726a]">ሐሙስ, ግንቦት 25, 2016 / Thursday, June 3, 2024</p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
-              <h3 className="text-xl font-semibold text-[#85726a] mb-4">Number of People</h3>
-              <p className="text-[#85726a]">225 People</p>
-            </div>
-
-            {/* Card 4 */}
-            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
-              <h3 className="text-xl font-semibold text-[#85726a] mb-4">Capacity People</h3>
-              <p className="text-[#85726a]">400 People</p>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div>
-          <h2 className="text-3xl font-bold">Detail Page</h2>
-         <div>
-         <div className="p-6 bg-white shadow-lg rounded-lg flex flex-col items-start space-y-4">
-  <h3 className="text-xl text-[#85726a] flex items-center space-x-2">
-    <i className="fas fa-hotel text-[#85726a]"></i>
-    <span>Hotel Name: Kuriftu</span>
-  </h3>
-  <h3 className="text-xl  text-[#85726a] flex items-center space-x-2">
-    <i className="fas fa-map-marker-alt text-[#85726a]"></i>
-    <span>Location: Bahir Dar</span>
-  </h3>
-  <h4 className="text-xl font-medium text-[#85726a] flex items-center space-x-2">
-    <i className="fas fa-phone text-[#85726a]"></i>
-    <span>0987654321</span>
-  </h4>
-</div>
-
-         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 p-6">
-            {/* Card 1 */}
-            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
-              <h3 className="text-xl font-semibold text-[#85726a] mb-4">Start Date of Vacation</h3>
-              <p className="text-[#85726a]">ሐሙስ, ግንቦት 15, 2016 / Thursday, May 23, 2024</p>
-            </div>
-
-            {/* Card 2 */}
-            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
-              <h3 className="text-xl font-semibold text-[#85726a] mb-4">End Date of Vacation</h3>
-              <p className="text-[#85726a]">ሐሙስ, ግንቦት 25, 2016 / Thursday, June 3, 2024</p>
-            </div>
-
-            {/* Card 3 */}
-            <div className="bg-white p-6 rounded-lg shadow-lg hover:shadow-xl transition duration-300 ease-in-out">
-              <h3 className="text-xl font-semibold text-[#85726a] mb-4">Number of People Allowed</h3>
-              <p className="text-[#85726a]">5 People</p>
-            </div>
-          </div>
-         </div>
-        
-         <Link href="/Splashing" passHref className=" h-10 w-30 flex justify-center items-center  fixed p-6 bg-slate-300 bottom-20 right-5 rounded-full border-solid border-2 border-yellow-400">
-         <button className="text-[#634f46] rounded-lg" onClick={handleBidNow}>Bid Now</button>
+      {activePage === 'service' &&
+        <>
+        <div className="w-full h-[300px] bg-[url('/boat.avif')] bg-cover bg-center ">
+  
+        <p className='text-3xl p-5'>
+        <Link href="/" passHref className="text-blue-600">
+       <FaArrowLeft/>
         </Link>
-        <div>Gion It soltion</div>
-        <div></div>
-        <div></div>
-        </div>
-      )}
+      </p>
+      </div>
+        <div className="max-w-4xl mx-auto p-6  shadow-lg ">
+        <h2 className="text-2xl font-semibold text-blue-600 mb-6">Book Your Boat Transport</h2>
+         <ToastContainer />
+
+        <form onSubmit={handleSubmit}>
+  
+          {/* User Information */}
+          <div className="mb-4">
+            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Full Name</label>
+            <input
+              type="text"
+              id="firstName"
+              name="firstName"
+              value={first_name}
+              onChange={(e)=>{setFirstName(e.target.value)}}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">middle Name</label>
+            <input
+              type="text"
+              id="last Name"
+              name="last_name"
+              value={last_name}
+              onChange={(e)=>{setLastName(e.target.value)}}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+          <div className="mb-4">
+            <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">Last Name</label>
+            <input
+              type="text"
+              id="last Name"
+              name="last_name"
+              value={last_name}
+              onChange={(e)=>{setLastName(e.target.value)}}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+  
+          {/* <div className="mb-4">
+            <label htmlFor="nationality" className="block text-sm font-medium text-gray-700">Nationality</label>
+            <input
+              type="text"
+              id="nationality"
+              name="nationality"
+              value={formData.nationality}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="passportNumber" className="block text-sm font-medium text-gray-700">Passport Number</label>
+            <input
+              type="text"
+              id="passportNumber"
+              name="passportNumber"
+              value={formData.passportNumber}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div> */}
+  
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              placeholder='optional'
+              onChange={(e)=>{setEmail(e.target.value)}}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+         
+            />
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <input
+              type="text"
+              id="phoneNumber"
+              name="phoneNumber"
+              value={phone}
+              placeholder='optional'
+              onChange={(e)=>{setPhone(e.target.value)}}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+  
+          {/* Travel Information */}
+          <div className="mb-4">
+            <label htmlFor="departureLocation" className="block text-sm font-medium text-gray-700">Departure Location</label>
+            <input
+              type="text"
+              id="departureLocation"
+              name="departureLocation"
+              value="Bahir Dar"
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="destinationLocation" className="block text-sm font-medium text-gray-700">Destination Location</label>
+            <input
+              type="text"
+              id="destinationLocation"
+              name="destinationLocation"
+              value={card.title}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="preferredDate" className="block text-sm font-medium text-gray-700">Preferred Date</label>
+            <input
+              type="date"
+              id="preferredDate"
+              name="preferredDate"
+              value={formData.preferredDate}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="numberOfPassengers" className="block text-sm font-medium text-gray-700">Number of Passengers</label>
+            <input
+              type="number"
+              id="numberOfPassengers"
+              name="numberOfPassengers"
+              value={formData.numberOfPassengers}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              min="1"
+              required
+            />
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="typeOfTransport" className="block text-sm font-medium text-gray-700">Type of Transport</label>
+            <select
+              id="typeOfTransport"
+              name="typeOfTransport"
+              value={formData.typeOfTransport}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="">Select Type</option>
+              <option value="ferry">Ferry</option>
+              <option value="cargo_ship">Cargo Ship</option>
+              <option value="private_yacht">Private Yacht</option>
+            </select>
+          </div>
+  
+          {/* Payment Information */}
+          <div className="mb-4">
+            <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700">Payment Method</label>
+            <select
+              id="paymentMethod"
+              name="paymentMethod"
+              value={formData.paymentMethod}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="credit_card">Credit Card</option>
+              <option value="paypal">PayPal</option>
+              <option value="Chapa">Chapa</option>
+            </select>
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="currency" className="block text-sm font-medium text-gray-700">Currency</label>
+            <select
+              id="currency"
+              name="currency"
+              value={formData.currency}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            >
+              <option value="USD">USD</option>
+              <option value="Birr">Birr</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+  
+          {/* Special Requests */}
+          {/* <div className="mb-4">
+            <label htmlFor="specialNeeds" className="block text-sm font-medium text-gray-700">Special Needs</label>
+            <textarea
+              id="specialNeeds"
+              name="specialNeeds"
+              value={formData.specialNeeds}
+              onChange={handleChange}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              rows="3"
+            />
+          </div> */}
+    {/* <Link href="/Splashing" passHref > */}
+    <button
+            type="submit"
+            className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onClick={handleBidNow}>
+               <form method="POST" action="https://api.chapa.co/v1/hosted/pay" >
+    <input type="hidden" name="public_key" value={public_key} />
+    <input type="hidden" name="tx_ref" value={tx_ref} />
+    <input type="hidden" name="amount" value={amount} />
+    <input type="hidden" name="currency" value="ETB" />
+    <input type="hidden" name="email" value={email} />
+    <input type="hidden" name="first_name" value={first_name} />
+    <input type="hidden" name="last_name" value={last_name} />
+    <input type="hidden" name="title" value="Let us do this" />
+    <input type="hidden" name="description" value="Paying with Confidence with cha" />
+    <input type="hidden" name="logo" value="https://chapa.link/asset/images/chapa_swirl.svg" />
+    <input type="hidden" name="callback_url" value="https://example.com/callbackurl" />
+    <input type="hidden" name="return_url" value="http://localhost:3000/congratulation" />
+    <input type="hidden" name="meta[title]" value="test" />
+    <button type="submit" className='  border-solid border-2xl border-slate-600 active:bg-slate-100' >Book Now ✨</button>
+</form>
+          </button>
+   
+    {/* </Link> */}
+        
+        
+        </form>
+      </div>
+      </>
+      }
 
       <BottomNavBar />
     </div>
