@@ -81,25 +81,41 @@ const DetailPage = () => {
   };
 
 
+  useEffect(() => {
+    setCard(cardData.find((card) => card.id === parseInt(id)));
+  }, [id]);
+
   const validatePhone = (phone) => {
     const phoneRegex = /^09\d{8}$/;
     return phoneRegex.test(phone);
   };
-  
-  const handleBidNow = () => {
-    if (!email || !phone) {
-      toast.error("Please fill in either email or phone number.");
-    } else if (phone && !validatePhone(phone)) {
-      toast.error("Please enter a valid phone number starting with '09' followed by 8 digits.");
-    } else {
-      dispatch(selectCard(cardDetail)); // Dispatch the selected card to the Redux store
-      if (!localStorage.getItem('selectedCard')) {
-        localStorage.setItem('selectedCard', JSON.stringify(null));
-      }
-      handleCardSelect(cardDetail.id);
+
+  const handleBidNow = (e) => {
+    e.preventDefault(); // Prevent default form submission
+
+    // Validate required fields
+    if (!first_name || !last_name || !formData.preferredDate || !formData.numberOfPassengers || !formData.typeOfTransport || !formData.paymentMethod) {
+      toast.error("Please fill in all required fields.");
+      return;
     }
+
+    // Validate email or phone
+    if (!email && !phone) {
+      toast.error("Please provide either an email or a phone number.");
+      return;
+    }
+
+    // Validate phone format if provided
+    if (phone && !validatePhone(phone)) {
+      toast.error("Please enter a valid phone number starting with '09' followed by 8 digits.");
+      return;
+    }
+
+    // If all validations pass, submit the form
+    const form = e.target;
+    form.submit(); // Submit the form to navigate to the Chapa payment page
   };
-  
+
   const handleCardSelect = (cardId) => {
     // Save the selected card ID to localStorage
     localStorage.setItem('selectedCard', JSON.stringify(cardId));
