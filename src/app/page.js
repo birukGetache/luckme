@@ -52,7 +52,7 @@ const HomePage = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveBlogIndex((prevIndex) => (prevIndex + 1) % blogs.length);
-    }, 3000);
+    }, 5000); // Increased interval to 5 seconds (slower)
 
     return () => clearInterval(interval);
   }, [blogs.length]);
@@ -100,56 +100,64 @@ const HomePage = () => {
       <div className=' pt-3 bg-yellow-50'>
       
       {/* Blogs Section */}
-      <div className="space-y-4">
-      <div className="relative overflow-hidden pb-4 w-[85vmin]">
-  <div className=" flex-1 flex  overflow-x-auto space-x-6 ">
-    {blogs.map((blog, index) => (
-      <div
-        key={index}
-        className={`p-4 h-40  rounded-xl shadow-lg backdrop-blur-lg animate-slide`}
-        style={{ minWidth: "100vw" }} 
-      >
-        <img
-          src={blog.url}
-          alt="hello"
-          className={`h-full object-cover rounded-md ${index === activeBlogIndex ? "w-screen" : "w-[80vw]"}`}
-        />
-      </div>
-    ))}
-  </div>
-</div>
+      <div className="space-y-4 ">
+        <div className="relative overflow-hidden pb-4 max-w-full">
+          <div className="flex  overflow-x-hidden  "> {/* Removed overflow-x-auto and added flex */}
+              {blogs.map((blog, index) => (
+                <div
+                  key={index}
+                  className={` flex-shrink-0  p-4 h-60  rounded-xl shadow-lg backdrop-blur-lg  transition-opacity duration-500`} // Added flex-shrink-0
+                  style={{
+                      width: '100%', // Each blog takes up full viewport width
+                      opacity: index === activeBlogIndex ? 1 : 0, // Fade in/out
+                      position: index === activeBlogIndex ? 'relative' : 'absolute', // Stack blogs
+                      left: 0, // Ensure they are stacked at the left
+                      top: 0,
+                      transform: `translateX(${(index - activeBlogIndex) * 100}vw)`, //  Horizontal positioning
+                      transition: 'transform 0.5s ease-in-out, opacity 0.5s ease-in-out', //  Transition for transform and opacity
+                  }}
+                >
+                    <img
+                      src={blog.url}
+                      alt="hello"
+                      className={`w-full rounded-md overflow-hidden`} // No conditional width here
+                    />
+                </div>
+              ))}
+          </div>
+        </div>
 
-
-
-      <div className="text-center mt-2">
-      <div>
-
-</div>
-        <span className="text-2xl">
-          {blogs.map((_, index) => (
-            <span
-              key={index}
-              className={`px-2 transition-all duration-300 ${
-                index === activeBlogIndex ? "text-blue-500" : "text-gray-400"
-              }`}
-            >
-              •
+        <div className="text-center mt-2">
+          <div></div>
+          <span className="text-2xl">
+              {blogs.map((_, index) => (
+                <span
+                  key={index}
+                  className={`px-2 transition-all duration-300 ${
+                    index === activeBlogIndex ? "text-blue-500" : "text-gray-400"
+                  }`}
+                >
+                  •
+                </span>
+              ))}
+                <span className="text-xs font-bold flex  items-center w-44 text-blue-600 bg-gray-100 p-2 rounded-lg shadow-lg hover:bg-blue-50 transition-colors duration-300 mx-4">
+                    <span className='w-6 h-6 rounded-full bg-blue-500 flex justify-center items-center '>
+                        <FaCalendarAlt color='white'></FaCalendarAlt>
+                    </span>
+                    &nbsp; | {currentDate}
+                </span>
+                <WeatherInfo></WeatherInfo>
             </span>
-          ))}
-            <span class="text-xs font-bold flex  items-center w-44 text-blue-600 bg-gray-100 p-2 rounded-lg shadow-lg hover:bg-blue-50 transition-colors duration-300 mx-4"> <span className='w-6 h-6 rounded-full bg-blue-500 flex justify-center items-center '><FaCalendarAlt color='white'></FaCalendarAlt>  </span>&nbsp; | {currentDate}
-            </span>
-            <WeatherInfo></WeatherInfo>
-        </span>
+        </div>
       </div>
     </div>
-</div>
       {/* Booking Cards Section */}
       <div className="space-y-6">
         <p className='text-gray-700 text-xl px-6'>Destination</p>
       <div className="grid grid-cols-2 place-items-center gap-6 overflow-x-auto pb-4">
         {cardData.map((card, index) => (
         <>
-        <div className="flex flex-col  rounded-xl  bg-white w-full m-auto shadow-lg h-fit text-center cursor-pointer">
+        <div className="flex flex-col  rounded-xl p-2  bg-white w-full m-auto shadow-lg h-fit text-center cursor-pointer">
           {/* <h4 className="text-xl font-semibold flex flex-col gap-5">
             <span><img src="/y.svg" alt="logo" className='h-12 w-56'/></span>
             {card.title}
@@ -158,7 +166,7 @@ const HomePage = () => {
           <button className='w-fit h-6 bg-white text-blue-400 rounded-md px-2' onClick={()=>setVisible(true)}>more</button> */}
           <img src={card.url} className='rounded-xl'></img>
           <div className='bg-white  w-full h-full bg-opacity-45' onClick={()=>setVisible(true)}>
-          <p className=" m-auto text-2xl font-bold text-gray-700 ">{card.title}</p>
+          <p className=" m-auto text-2xl font-bold text-slate-700 ">{card.title}</p>
           </div>
         
 
