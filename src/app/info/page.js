@@ -1,77 +1,97 @@
-"use client"; // Marks the file as client-side rendered
-
-import React, { useState } from 'react';
-import { FaRegWindowClose, FaThumbsUp, FaHeart, FaThumbtack, FaComment } from 'react-icons/fa'; // For icons
-import BottomNavBar from '../components/BottomNavBar';
-
+"use client";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import { FaRegWindowClose, FaThumbsUp, FaHeart, FaThumbtack, FaComment } from "react-icons/fa";
+import BottomNavBar from "../components/BottomNavBar";
+import { useTranslation } from "react-i18next";
 const App = () => {
-  // Dummy data for the blog post
-  const blogPost = {
-    title: "Gonder",
-    description: "In 2014 we Are gonna to Gonder and visite the legendary temples, temples that are not found in other countries.",
-    img: "/boat.avif",
-    icons: [], // Array to store icon actions (like, favorite, pin)
-    comments: [], // Array to store comments
-  };
+  const [blogPost, setBlogPost] = useState(null);
+  const [comment, setComment] = useState("");
+  const [visibleComments, setVisibleComments] = useState(2);
+  const { t } = useTranslation();
+  useEffect(() => {
+    axios.get("https://tankwas-3.onrender.com/api/blogs")
+      .then((response) => {
+        if (response.data.length > 0) {
+          setBlogPost({
+            ...response.data[0],
+            comments: response.data[0].comments || [],
+          });
+        }
+      })
+      .catch((error) => console.error("Error fetching blog:", error));
+  }, []);
 
-  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state to toggle
-  const [comment, setComment] = useState(''); // State to manage the comment input
-  const [icons, setIcons] = useState(blogPost.icons); // State to manage icon actions
-  const [comments, setComments] = useState(blogPost.comments); // State to manage comments
-  const [visibleComments, setVisibleComments] = useState(2); // State to manage visible comments
-
-  // Toggle Modal
-  const openModal = () => setIsModalOpen(true);
-  const closeModal = () => setIsModalOpen(false);
-
-  // Handle icon click (like, favorite, pin)
-  const handleIconClick = (iconType) => {
-    setIcons((prevIcons) => [...prevIcons, iconType]);
-  };
-
-  // Handle comment submission
   const handleCommentSubmit = () => {
-    if (comment.trim()) {
-      setComments((prevComments) => [...prevComments, comment]);
-      setComment(''); // Clear the input after submission
+    if (comment.trim() && blogPost) {
+      axios.post(`https://tankwas-3.onrender.com/api/blogs/${blogPost._id}/comments`, { comment })
+        .then((response) => {
+          setBlogPost(response.data);
+          setComment("");
+        })
+        .catch((error) => console.error("Error adding comment:", error));
     }
   };
 
-  // Handle "Show More" button click
-  const handleShowMoreComments = () => {
-    setVisibleComments((prevVisibleComments) => prevVisibleComments + 2); // Increase visible comments by 2
+  const handleLike = () => {
+    if (blogPost) {
+      axios.post(`https://tankwas-3.onrender.com/api/blogs/${blogPost._id}/like`)
+        .then((response) => setBlogPost(response.data))
+        .catch((error) => console.error("Error liking the blog:", error));
+    }
   };
 
-  // Handle "Show Less" button click
-  const handleShowLessComments = () => {
-    setVisibleComments(2); // Reset visible comments to the initial value
+  const handleFavorite = () => {
+    if (blogPost) {
+      axios.post(`https://tankwas-3.onrender.com/api/blogs/${blogPost._id}/favorite`)
+        .then((response) => setBlogPost(response.data))
+        .catch((error) => console.error("Error updating favorite state:", error));
+    }
   };
+
+  const handlePin = () => {
+    if (blogPost) {
+      axios.post(`https://tankwas-3.onrender.com/api/blogs/${blogPost._id}/pin`)
+        .then((response) => setBlogPost(response.data))
+        .catch((error) => console.error("Error updating pin state:", error));
+    }
+  };
+
+  if (!blogPost) {
+    return <div className="flex justify-center items-center h-screen bg-gray-900">
+    <div className="relative w-20 h-20 flex justify-center items-center">
+      {/* Rotating Border */}
+      <div className="absolute w-full h-full border-4 border-transparent border-t-blue-500 border-r-blue-500 rounded-full animate-spin"></div>
+      {/* Inner Circle */}
+      <div className="w-12 h-12 bg-blue-500 rounded-full"></div>
+    </div>
+  </div>;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-50 to-indigo-100 p-8">
-      <p className="text-blue-500 m-auto w-full font-bold text-3xl">Blogs</p>
+    <div className="min-h-screen bg-gradient-to-r  from-slate-500 to-slate-500 p-8">
+ <p className="text-slate-900 m-auto w-full font-bold text-3xl">
+        {t('blogsTitle')}
+      </p>
 
-      {/* Blog Card */}
       <div className="mt-8 max-w-md mx-auto bg-white rounded-xl shadow-md overflow-hidden">
-        <img className="w-full h-48 object-cover" src={blogPost.img} alt={blogPost.title} />
+        <img className="w-full h-48 object-cover" src={blogPost.imageUrl} alt={blogPost.title} />
         <div className="p-6">
           <h2 className="text-xl font-bold text-blue-500">{blogPost.title}</h2>
           <p className="mt-2 text-gray-600">{blogPost.description}</p>
 
-          {/* Icons Section */}
-          <div className="flex justify-between mt-4">
-            <button onClick={() => handleIconClick('like')} className="text-blue-500 hover:text-blue-700">
-              <FaThumbsUp size={24} />
+          <div className="mt-4 flex space-x-4">
+            <button onClick={handleLike} className="text-blue-500 hover:text-blue-700 flex items-center">
+              <FaThumbsUp className="mr-1" /> {blogPost.likes} Likes
             </button>
-            <button onClick={() => handleIconClick('favorite')} className="text-red-500 hover:text-red-700">
-              <FaHeart size={24} />
+            <button onClick={handleFavorite} className={`flex items-center ${blogPost.isFavorite ? "text-red-500" : "text-gray-500"} hover:text-red-700`}>
+              <FaHeart className="mr-1" /> {blogPost.isFavorite ? "Favorited" : "Favorite"}
             </button>
-            <button onClick={() => handleIconClick('pin')} className="text-green-500 hover:text-green-700">
-              <FaThumbtack size={24} />
+            <button onClick={handlePin} className={`flex items-center ${blogPost.isPinned ? "text-yellow-500" : "text-gray-500"} hover:text-yellow-700`}>
+              <FaThumbtack className="mr-1" /> {blogPost.isPinned ? "Pinned" : "Pin"}
             </button>
           </div>
 
-          {/* Comment Section */}
           <div className="mt-4">
             <div className="flex items-center">
               <input
@@ -89,49 +109,33 @@ const App = () => {
               </button>
             </div>
 
-            {/* Display Comments */}
             <div className="mt-4">
-              {comments.slice(0, visibleComments).map((comment, index) => (
+              {blogPost.comments.slice(0, visibleComments).map((comment, index) => (
                 <div key={index} className="text-gray-700 bg-gray-100 p-2 rounded-lg mt-2">
                   {comment}
                 </div>
               ))}
             </div>
 
-            {/* Show More Button */}
-            {comments.length > visibleComments && (
+            {blogPost.comments.length > visibleComments && (
               <button
-                onClick={handleShowMoreComments}
+                onClick={() => setVisibleComments((prev) => prev + 2)}
                 className="mt-2 text-blue-500 hover:text-blue-700"
               >
                 Show More
               </button>
             )}
-
-            {/* Show Less Button */}
             {visibleComments > 2 && (
-              <button
-                onClick={handleShowLessComments}
-                className="mt-2 text-blue-500 hover:text-blue-700"
-              >
-                Show Less
-              </button>
-            )}
+    <button
+      onClick={() => setVisibleComments(2)}
+      className="mt-2 text-blue-500 hover:text-blue-700"
+    >
+      Show Less
+    </button>
+  )}
           </div>
         </div>
       </div>
-
-      {/* Modal (Optional) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded-lg">
-            <button onClick={closeModal} className="text-red-500 hover:text-red-700">
-              <FaRegWindowClose size={24} />
-            </button>
-            <p>Modal Content Here</p>
-          </div>
-        </div>
-      )}
 
       <BottomNavBar />
     </div>

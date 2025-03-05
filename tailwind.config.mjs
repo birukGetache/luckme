@@ -7,6 +7,15 @@ export default {
       fontFamily: {
         playfair: ["Nunito", 'serif'], // Corrected comment
       },
+      animation: {
+        slide: "slide 20s linear infinite",
+      },
+      keyframes: {
+        slide: {
+          "0%": { transform: "translateX(100%)" },
+          "100%": { transform: "translateX(-100%)" },
+        },
+      },
       keyframes: {
         rotateIcon: {
           '0%': { transform: 'rotate(0deg)' },

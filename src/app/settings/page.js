@@ -1,52 +1,75 @@
 "use client";
 import { useRouter } from 'next/navigation';
+import { useTranslation } from 'react-i18next';
 import BottomNavBar from '../components/BottomNavBar';
 import {
-  FaUser,          // Account
-  FaBell,          // Notification and Sounds
-  FaMobileAlt,     // Devices
-  FaGlobe,         // Language
-  FaQuestionCircle,// Ask Question
-  FaInfoCircle,    // Tankwa FAQ
-  FaUserPlus,      // Invite Friends
+  FaUser,
+  FaBell,
+  FaMobileAlt,
+  FaGlobe,
+  FaQuestionCircle,
+  FaInfoCircle,
+  FaUserPlus,
 } from 'react-icons/fa';
 
 const settingsList = [
-  { id: 1, title: 'Account', icon: <FaUser className="inline-block mr-4" /> },
-  { id: 3, title: 'Notification ', icon: <FaBell className="inline-block mr-4" /> },
-  { id: 6, title: 'Devices', icon: <FaMobileAlt className="inline-block mr-4" /> },
-  { id: 7, title: 'Language', icon: <FaGlobe className="inline-block mr-4" /> },
-  { id: 8, title: 'Ask Question', icon: <FaQuestionCircle className="inline-block mr-4" /> },
-  { id: 9, title: 'Tankwa FAQ', icon: <FaInfoCircle className="inline-block mr-4" /> },
-  { id: 10, title: 'Invite Friends', icon: <FaUserPlus className="inline-block mr-4" /> },
+  { id: 6, title: 'Devices', icon: <FaMobileAlt className="inline-block" /> },
+  { id: 7, title: 'Language', icon: <FaGlobe className="inline-block" /> },
+  { id: 8, title: 'AskQuestion', icon: <FaQuestionCircle className="inline-block" /> },
+  { id: 9, title: 'TankwaFAQ', icon: <FaInfoCircle className="inline-block" /> },
+  { id: 10, title: 'InviteFriends', icon: <FaUserPlus className="inline-block" /> },
 ];
 
 export default function Settings() {
   const router = useRouter();
+  const { t, i18n } = useTranslation();
 
   const handleNavigation = (id) => {
-    // Redirect to different pages for each section
     router.push(`/settings/${id}`);
   };
 
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-r bg-white flex items-center justify-center py-12 px-6">
-      <div className="w-full max-w-3xl bg-white rounded-lg shadow-2xl p-8">
-        <h1 className="text-5xl font-extrabold text-center text-gray-900 mb-12">Settings</h1>
+    <div className="bg-gradient-to-r bg-slate-500 flex items-center justify-center py-12 px-6">
+      <div className="w-full max-w-3xl bg-white bg-opacity-25 rounded-lg shadow-2xl p-8">
+        <h1 className="text-5xl font-extrabold text-center text-slate-800 mb-12">
+          {t('Settings')}
+        </h1>
         <ul className="space-y-6">
           {settingsList.map((setting) => (
             <li
               key={setting.id}
-              className="p-6 bg-gradient-to-r bg-blue-300 rounded-lg cursor-pointer transform hover:scale-105 hover:shadow-xl hover:bg-blue-500 hover:text-white transition-all duration-300 ease-in-out"
+              className="p-6 bg-gradient-to-r from-slate-600 to-gray-700 rounded-2xl cursor-pointer transform hover:scale-105 hover:shadow-2xl hover:from-blue-600 hover:to-blue-500 hover:text-white transition-all duration-300 ease-in-out"
               onClick={() => handleNavigation(setting.id)}
             >
-              <div className="flex items-center">
-                {setting.icon} {/* Render the icon */}
-                <span className="text-xl font-semibold text-gray-800">{setting.title}</span>
+              <div className="flex items-center space-x-4">
+                <div className="p-2 bg-gray-800 text-white rounded-full">
+                  {setting.icon}
+                </div>
+                <span className="text-xl font-bold text-gray-100">
+                  {t(setting.title)}
+                </span>
               </div>
             </li>
           ))}
         </ul>
+        {/* <div className="mt-8 space-x-4">
+          <button
+            onClick={() => changeLanguage('en')}
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-all"
+          >
+            English
+          </button>
+          <button
+            onClick={() => changeLanguage('am')}
+            className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-all"
+          >
+            Amharic
+          </button>
+        </div> */}
       </div>
       <BottomNavBar />
     </div>

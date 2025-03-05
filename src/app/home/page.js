@@ -1,61 +1,56 @@
-// src/SponsorPage.js
 "use client"
-import React, { useState } from 'react';
-import { FaLink, FaTwitter, FaFacebook, FaInstagram } from 'react-icons/fa';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { FaLink, FaTwitter, FaFacebook, FaInstagram, FaEdit, FaTrash } from 'react-icons/fa';
 import BottomNavBar from '../components/BottomNavBar';
-
-// Array of sponsors with actual logos
-const sponsorsData = [
-  {
-    name: 'Sponsor A',
-    logo: 'https://via.placeholder.com/100?text=LogoA',  // Use actual online images here
-    url: 'https://sponsorA.com',
-    description: 'Sponsor A is a leader in innovative tech solutions.',
-    twitter: 'https://twitter.com/sponsorA',
-    facebook: 'https://facebook.com/sponsorA',
-    instagram: 'https://instagram.com/sponsorA',
-  },
-  {
-    name: 'Sponsor B',
-    logo: 'https://via.placeholder.com/100?text=LogoB',
-    url: 'https://sponsorB.com',
-    description: 'Sponsor B supports the arts and creativity.',
-    twitter: 'https://twitter.com/sponsorB',
-    facebook: 'https://facebook.com/sponsorB',
-    instagram: 'https://instagram.com/sponsorB',
-  },
-  {
-    name: 'Sponsor C',
-    logo: 'https://via.placeholder.com/100?text=LogoC',
-    url: 'https://sponsorC.com',
-    description: 'Sponsor C is a global leader in sustainable energy.',
-    twitter: 'https://twitter.com/sponsorC',
-    facebook: 'https://facebook.com/sponsorC',
-    instagram: 'https://instagram.com/sponsorC',
-  },
-  // Add more sponsors as needed
-];
-
+import { useTranslation } from "react-i18next";
 const SponsorPage = () => {
+  const [sponsors, setSponsors] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  
+
+  useEffect(() => {
+    fetchSponsors();
+  }, []);
+
+  // Fetch sponsors from the backend
+  const fetchSponsors = async () => {
+    try {
+      const response = await axios.get('https://tankwas-3.onrender.com/sponser');
+      setSponsors(response.data);
+    } catch (error) {
+      console.error('Failed to fetch sponsors:', error);
+    }
+  };
+
+  // Delete sponsor
+  const deleteSponsor = async (id) => {
+    try {
+      await axios.delete(`https://tankwas-3.onrender.com/sponser/${id}`);
+      fetchSponsors();  // Refresh the list after deletion
+    } catch (error) {
+      console.error('Failed to delete sponsor:', error);
+    }
+  };
+
   // Filter sponsors based on the search term
-  const filteredSponsors = sponsorsData.filter((sponsor) =>
+  const filteredSponsors = sponsors.filter((sponsor) =>
     sponsor.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const { t } = useTranslation();
+
   return (
-    <div className="min-h-screen bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 flex flex-col items-center justify-center p-10">
-      <h1 className="text-3xl sm:text-4xl font-semibold text-gray-800 mb-8 text-center">
-        Our Amazing Sponsors
+    <div className="min-h-screen bg-gradient-to-br from-slate-500  to-slate-500 flex flex-col items-center p-10">
+      <h1 className="text-4xl sm:text-5xl font-bold text-white mb-8 text-center">
+      {t('sponsorsTitle')}
       </h1>
 
       {/* Search Bar */}
-      <div className="mb-6 w-full max-w-xs">
+      <div className="mb-8 w-full max-w-md">
         <input
           type="text"
           placeholder="Search sponsors..."
-          className="w-full p-3 rounded-lg border border-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full p-3 rounded-lg border border-gray-500 bg-slate-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
@@ -64,59 +59,70 @@ const SponsorPage = () => {
       {/* Display Sponsors */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
         {filteredSponsors.length > 0 ? (
-          filteredSponsors.map((sponsor, index) => (
+          filteredSponsors.map((sponsor) => (
             <div
-              key={index}
-              className="bg-white p-4 sm:p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow group"
-            >
-              <a href={sponsor.url} target="_blank" rel="noopener noreferrer" className="block text-center mb-4">
-                <img
-                  src={sponsor.logo}
-                  alt={sponsor.name}
-                  className="mx-auto mb-4 w-24 h-24 sm:w-32 sm:h-32 object-contain transition-transform transform group-hover:scale-105"
-                />
-                <h2 className="text-lg sm:text-xl font-semibold text-gray-700">{sponsor.name}</h2>
-              </a>
-              <p className="text-gray-600 text-sm sm:text-base mb-4">{sponsor.description}</p>
+  key={sponsor._id}
+  className="bg-white border-2 border-slate-500 bg-opacity-10 w-full p-6 rounded-xl shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:-translate-y-2 group relative"
+>
+  {/* Delete Button (Top Right) */}
+  <div className="absolute top-2 right-4">
+    <button
+      onClick={() => deleteSponsor(sponsor._id)}
+      className="text-red-400 hover:text-red-500 transition-colors"
+    >
+      <FaTrash size={20} />
+    </button>
+  </div>
 
-              <div className="flex justify-center space-x-4 mb-4">
-                {/* Social Media Links */}
-                {sponsor.twitter && (
-                  <a href={sponsor.twitter} target="_blank" rel="noopener noreferrer">
-                    <FaTwitter className="text-blue-500 hover:text-blue-600 transition-colors" size={18} />
-                  </a>
-                )}
-                {sponsor.facebook && (
-                  <a href={sponsor.facebook} target="_blank" rel="noopener noreferrer">
-                    <FaFacebook className="text-blue-700 hover:text-blue-800 transition-colors" size={18} />
-                  </a>
-                )}
-                {sponsor.instagram && (
-                  <a href={sponsor.instagram} target="_blank" rel="noopener noreferrer">
-                    <FaInstagram className="text-pink-500 hover:text-pink-600 transition-colors" size={18} />
-                  </a>
-                )}
-              </div>
+  {/* Image and Text */}
+  <div className="flex items-center mb-4">
+    <img
+      src={`https://tankwas-3.onrender.com${sponsor.logo}`}
+      alt={sponsor.name}
+      className="w-16 h-16 rounded-full object-contain mr-4"
+    />
+    <div>
+      <h2 className="text-xl sm:text-2xl font-bold text-white">{sponsor.name}</h2>
+      <p className="text-gray-300 text-sm sm:text-base">{sponsor.description}</p>
+    </div>
+  </div>
 
-              {/* External Website Link */}
-              <div className="text-center">
-                <a
-                  href={sponsor.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center text-blue-600 hover:text-blue-700"
-                >
-                  <FaLink className="mr-2" size={16} />
-                  Visit Website
-                </a>
-              </div>
-            </div>
+  {/* Sponsor URL */}
+  <h5 className='flex justify-center'><a
+    href={sponsor.url}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-slate-800 text-sm mt-2 inline-block m-auto border-2 border-slate-900 rounded-lg px-2"
+  >
+    Visit Website
+  </a></h5>
+
+  {/* Social Media Links */}
+  <div className="flex justify-center space-x-4 mt-4">
+    {sponsor.twitter && (
+      <a href={sponsor.twitter} target="_blank" rel="noopener noreferrer">
+        <FaTwitter className="text-blue-400 hover:text-blue-500 transition-colors" size={20} />
+      </a>
+    )}
+    {sponsor.facebook && (
+      <a href={sponsor.facebook} target="_blank" rel="noopener noreferrer">
+        <FaFacebook className="text-blue-600 hover:text-blue-700 transition-colors" size={20} />
+      </a>
+    )}
+    {sponsor.instagram && (
+      <a href={sponsor.instagram} target="_blank" rel="noopener noreferrer">
+        <FaInstagram className="text-pink-500 hover:text-pink-600 transition-colors" size={20} />
+      </a>
+    )}
+  </div>
+</div>
+
           ))
         ) : (
-          <p className="text-center text-gray-600">No sponsors found for "{searchTerm}"</p>
+          <p className="text-center text-gray-400">No sponsors found for "{searchTerm}"</p>
         )}
       </div>
-      <BottomNavBar></BottomNavBar>
+      <BottomNavBar />
     </div>
   );
 };

@@ -1,5 +1,6 @@
 "use client";
-import { usePathname } from 'next/navigation';
+import axios from "axios";
+import { usePathname ,useRouter} from 'next/navigation';
 import { useEffect, useState } from 'react';
 import BottomNavBar from '@/app/components/BottomNavBar';
 import { toast, ToastContainer } from 'react-toastify';
@@ -7,34 +8,46 @@ import 'react-toastify/dist/ReactToastify.css';
 import Link from 'next/link';
 import { FaArrowLeft } from 'react-icons/fa';
 import { useDispatch } from 'react-redux';
-import { selectCard } from '../../../../redux/counterSlice';
-import { useParams } from 'react-router-dom';
-import Image from "next/image";
+import { useTranslation } from "react-i18next";
+// import { useNavigation } from "react-router-dom";
 const DetailPage = () => {
+    const { t, i18n } = useTranslation(); // Get the current language from i18n
+  const router = useRouter();
   const pathname = usePathname(); // Get the current path of the page
   const id = pathname.split("/").pop(); // Extract the `id` from the URL path
   const dispatch = useDispatch();
   const [cardDetail, setCardDetail] = useState(null);
+  const [destinations, setDestinations] = useState('');
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State for menu toggle
   const [activePage, setActivePage] = useState('service'); // State to toggle between Service and Detail
-  const cardData = [
-    {id:1, title: "Gonder", description: `5-star hotel with children, chosen `,url:"/gonder.avif" },
-    {id:2, title: "Gorgora ", description: `5-star hotel with children, chosen`,url:"/Dembiya.jpg" },
-    {id:3, title: "Dembiya", description: `5-star hotel with children, chosen`,url:"/Dembiya.jpg" },
-    {id:4, title: " Hamusit", description: "Add a new student to the system" ,url:"/Hamusit.jpg"},
-    {id:5, title: "Fogera", description: "Essential items for your trip" ,url:"/gonder.avif"},
-    {id:6, title: "Bahita", description: "Price for late home rental" ,url:"/gonder.avif"},
-    {id:7, title: "Dek deset", description: "Medicines available for purchase",url:"/gonder.avif" },
-  ];
+  useEffect(() => {
+      const fetchDestinations = async () => {
+        try {
+          const response = await fetch(`http://localhost:5000/destinations/${id}`); // Replace with your API endpoint
+          const data = await response.json();
+      //    const parsedData = JSON.parse(data);
+// console.log(parsedData.titles);
+//           {destinations.titles[i18n.language]} 
+          setDestinations(data.titles[i18n.language]);
+          console.log(data)
+        } catch (error) {
+          console.error("Error fetching destinations:", error);
+        }
+      };
+  
+      fetchDestinations();
+    }, []);
  const [first_name, setFirstName] = useState("");
   const [last_name , setLastName] = useState("");
   const [email, setEmail ]=useState("")
   const [phone , setPhone] = useState("");
+  const [promocode , setPromoCode] = useState("");
+  const [middleName,setMiddleName] = useState("");
   const [amount , setAmount] = useState(100);
   const [card , setCard] = useState({});
   const sanitizedEmail = email.replace(/[^a-zA-Z0-9._-]/g, ''); // Remove invalid characters from email
   const tx_ref = `${sanitizedEmail}-txburusdf-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  
+  //const navigator = useNavigation();
   const public_key = 'CHAPUBK_TEST-XQxA1FKglJqifPTKFg1jBlNKYqHBlAgL'
     const triggerConfetti = () => {
         confetti({
@@ -46,26 +59,18 @@ const DetailPage = () => {
         });
       };
 
-      useEffect(()=>{
-      setCard(cardData.find((card) => card.id === parseInt(id)))
+      // useEffect(()=>{
+      // setCard(cardData.find((card) => card.id === parseInt(id)))
       
-      },[id])
+      // },[id])
   const [formData, setFormData] = useState({
     nationality: '',
     passportNumber: '',
-    email: '',
-    phoneNumber: '',
     departureLocation: '',
     destinationLocation: '',
-    preferredDate: '',
     numberOfPassengers: 1,
-    typeOfTransport: '',
     paymentMethod: '',
     currency: 'USD',
-    specialNeeds: '',
-    accessibilityNeeds: '',
-    foodPreferences: '',
-    petInfo: '',
   });
 
   const handleChange = (e) => {
@@ -75,15 +80,49 @@ const DetailPage = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e)  => {
     e.preventDefault();
-    console.log(formData); // Here, you can send the data to your backend or API
+    try {
+      const result = await axios.post("http://localhost:5000/PostTransaction", {
+        firstName: first_name,
+        middleName: middleName,
+        lastName: last_name,
+        amount: amount,
+        email: email,
+        preferredDate: formData.preferredDate,
+        departureLocation: "Bahir Dar",
+        phone: phone,
+        promocode: promocode,
+        destinationLocation: destinations,
+        numberOfPassengers: formData.numberOfPassengers,
+        typeOfTransport: formData.typeOfTransport,
+        paymentMethod: formData.paymentMethod,
+        currency: formData.currency
+      });
+      console.log(result.data)
+      if(paymentMethod === ("Chapa" || "paypal")){
+      window.location.href = result.data.url;
+      console.log("Response:", result.data.paymentUrl);
+      if (result.status === 201) {
+        const id = result.data.booking._id; // Assuming result.data contains an 'id' field
+        console.log(id)
+      // router.push(`/congratulation?id=${id}`); // Pass the id as a query parameter
+       router.push(result.data.paymentUrl); // Pass the id as a query parameter
+      }
+      }
+      else{
+        window.location.href = result.data.checkoutUrl;
+      }
+    } catch (error) {
+      console.error("Error posting transaction:", error);
+    }
+    e.preventDefault();
   };
 
 
-  useEffect(() => {
-    setCard(cardData.find((card) => card.id === parseInt(id)));
-  }, [id]);
+  // useEffect(() => {
+  //   setCard(cardData.find((card) => card.id === parseInt(id)));
+  // }, [id]);
 
   const validatePhone = (phone) => {
     const phoneRegex = /^09\d{8}$/;
@@ -122,13 +161,13 @@ const DetailPage = () => {
     // Optionally, trigger a re-render or action here (e.g., reload the page, or use state updates)
   //  window.location.reload(); // This is a simple way to force a re-render (though not ideal)
   };
-  useEffect(() => {
-    if (id) {
-      // Find the card with the matching ID
-      const detail = cardData.find((card) => card.id === parseInt(id));
-      setCardDetail(detail);
-    }
-  }, [id]);
+  // useEffect(() => {
+  //   if (id) {
+  //     // Find the card with the matching ID
+  //     const detail = cardData.find((card) => card.id === parseInt(id));
+  //     setCardDetail(detail);
+  //   }
+  // }, [id]);
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -138,8 +177,15 @@ const DetailPage = () => {
     setActivePage(page);
   };
 
-  if (!cardDetail) {
-    return <div>Loading...</div>; // Display loading while fetching data
+  if (!destinations) {
+    return <div className="flex justify-center items-center h-screen bg-gray-900">
+    <div className="relative w-20 h-20 flex justify-center items-center">
+      {/* Rotating Border */}
+      <div className="absolute w-full h-full border-4 border-transparent border-t-blue-500 border-r-blue-500 rounded-full animate-spin"></div>
+      {/* Inner Circle */}
+      <div className="w-12 h-12 bg-blue-500 rounded-full"></div>
+    </div>
+  </div>;; // Display loading while fetching data
   }
 
   return (
@@ -162,14 +208,14 @@ const DetailPage = () => {
       </p>
       </div>
         <div className="max-w-4xl mx-auto p-6  shadow-lg ">
-        <h2 className="text-2xl font-semibold text-blue-600 mb-6">Book Your Boat Transport</h2>
+        <h2 className="text-2xl font-semibold text-slate-600 mb-6">{t('BookBoatTransport')}</h2>
          <ToastContainer />
 
         <form onSubmit={handleSubmit}>
   
           {/* User Information */}
           <div className="mb-4">
-            <label htmlFor="firstName" className="block text-sm font-medium text-gray-700">Full Name</label>
+            <label htmlFor="firstName" className="block text-sm font-medium text-slate-700">{t("FirstName")}</label>
             <input
               type="text"
               id="firstName"
@@ -181,19 +227,19 @@ const DetailPage = () => {
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">middle Name</label>
+            <label htmlFor="last_name" className="block text-sm font-medium text-slate-700">{t("MiddleName")}</label>
             <input
               type="text"
               id="last Name"
               name="last_name"
-              value={last_name}
-              onChange={(e)=>{setLastName(e.target.value)}}
+              value={middleName}
+              onChange={(e)=>{setMiddleName(e.target.value)}}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
           <div className="mb-4">
-            <label htmlFor="last_name" className="block text-sm font-medium text-gray-700">Last Name</label>
+            <label htmlFor="last_name" className="block text-sm font-medium text-slate-700">{t("LastName")}</label>
             <input
               type="text"
               id="last Name"
@@ -232,7 +278,7 @@ const DetailPage = () => {
           </div> */}
   
           <div className="mb-4">
-            <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email</label>
+            <label htmlFor="email" className="block text-sm font-medium text-slate-700">{t('Email')}</label>
             <input
               type="email"
               id="email"
@@ -246,7 +292,7 @@ const DetailPage = () => {
           </div>
   
           <div className="mb-4">
-            <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Phone Number</label>
+            <label htmlFor="phoneNumber" className="block text-sm font-medium text-slate-700">{t("Phone")}</label>
             <input
               type="text"
               id="phoneNumber"
@@ -260,7 +306,7 @@ const DetailPage = () => {
   
           {/* Travel Information */}
           <div className="mb-4">
-            <label htmlFor="departureLocation" className="block text-sm font-medium text-gray-700">Departure Location</label>
+            <label htmlFor="departureLocation" className="block text-sm font-medium text-slate-700">{t('Departure')}</label>
             <input
               type="text"
               id="departureLocation"
@@ -272,12 +318,25 @@ const DetailPage = () => {
           </div>
   
           <div className="mb-4">
-            <label htmlFor="destinationLocation" className="block text-sm font-medium text-gray-700">Destination Location</label>
+            <label htmlFor="promo" className="block text-sm font-medium text-slate-700">{t('Promocode')}</label>
+            <input
+              type="text"
+              id="promocode"
+              name="promocode"
+              value={promocode}
+              onChange={(e)=>setPromoCode(e.target.value)}
+              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+  
+          <div className="mb-4">
+            <label htmlFor="destinationLocation" className="block text-sm font-medium text-slate-700">{t('DestinationLocation')}</label>
             <input
               type="text"
               id="destinationLocation"
               name="destinationLocation"
-              value={card.title}
+              // value={destinations.titles[i18n.language]} 
+              value={destinations}
               onChange={handleChange}
               className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
@@ -285,7 +344,7 @@ const DetailPage = () => {
           </div>
   
           <div className="mb-4">
-            <label htmlFor="preferredDate" className="block text-sm font-medium text-gray-700">Preferred Date</label>
+            <label htmlFor="preferredDate" className="block text-sm font-medium text-slate-700">{t('Preferred')}</label>
             <input
               type="date"
               id="preferredDate"
@@ -298,7 +357,7 @@ const DetailPage = () => {
           </div>
   
           <div className="mb-4">
-            <label htmlFor="numberOfPassengers" className="block text-sm font-medium text-gray-700">Number of Passengers</label>
+            <label htmlFor="numberOfPassengers" className="block text-sm font-medium text-slate-700">{t('Passengers')}</label>
             <input
               type="number"
               id="numberOfPassengers"
@@ -312,53 +371,54 @@ const DetailPage = () => {
           </div>
   
           <div className="mb-4">
-            <label htmlFor="typeOfTransport" className="block text-sm font-medium text-gray-700">Type of Transport</label>
+            <label htmlFor="typeOfTransport" className="block text-sm font-medium text-slate-700">{t('Transport')}</label>
             <select
               id="typeOfTransport"
               name="typeOfTransport"
               value={formData.typeOfTransport}
               onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-44 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-slate-500"
               required
             >
-              <option value="">Select Type</option>
-              <option value="ferry">Ferry</option>
-              <option value="cargo_ship">Cargo Ship</option>
-              <option value="private_yacht">Private Yacht</option>
+              <option value="">{t('SelectType')}</option>
+              <option value="ferry">{t('Ferry')}</option>
+              <option value="cargo_ship">{t('Cargo')}</option>
+              <option value="private_yacht">{t('PrivateYacht')}</option>
             </select>
           </div>
   
           {/* Payment Information */}
           <div className="mb-4">
-            <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700">Payment Method</label>
+            <label htmlFor="paymentMethod" className="block text-sm font-medium text-gray-700">{t('PaymentMethod')}</label>
             <select
               id="paymentMethod"
               name="paymentMethod"
               value={formData.paymentMethod}
               onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-44 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="credit_card">Credit Card</option>
-              <option value="paypal">PayPal</option>
-              <option value="Chapa">Chapa</option>
+                <option value="">{t('SelectType')}</option>
+              <option value="stripe">{t('CreditCard')}</option>
+              <option value="paypal">{t('PayPal')}</option>
+              <option value="Chapa">{t('Chapa')}</option>
             </select>
           </div>
   
           <div className="mb-4">
-            <label htmlFor="currency" className="block text-sm font-medium text-gray-700">Currency</label>
+            <label htmlFor="currency" className="block text-sm font-medium text-gray-700">{t('Currency')}</label>
             <select
               id="currency"
               name="currency"
               value={formData.currency}
               onChange={handleChange}
-              className="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-1 block w-44 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             >
-              <option value="USD">USD</option>
-              <option value="Birr">Birr</option>
-              <option value="EUR">EUR</option>
-              <option value="GBP">GBP</option>
+              <option value="USD">{t('USD')}</option>
+              <option value="Birr">{t('Birr')}</option>
+              <option value="EUR">{t('EUR')}</option>
+              <option value="GBP">{t('GBP')}</option>
             </select>
           </div>
   
@@ -377,24 +437,9 @@ const DetailPage = () => {
     {/* <Link href="/Splashing" passHref > */}
     <button
             type="submit"
-            className="w-full bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onClick={handleBidNow}>
-               <form method="POST" action="https://api.chapa.co/v1/hosted/pay" >
-    <input type="hidden" name="public_key" value={public_key} />
-    <input type="hidden" name="tx_ref" value={tx_ref} />
-    <input type="hidden" name="amount" value={amount} />
-    <input type="hidden" name="currency" value="ETB" />
-    <input type="hidden" name="email" value={email} />
-    <input type="hidden" name="first_name" value={first_name} />
-    <input type="hidden" name="last_name" value={last_name} />
-    <input type="hidden" name="title" value="Let us do this" />
-    <input type="hidden" name="description" value="Paying with Confidence with cha" />
-    <input type="hidden" name="logo" value="https://chapa.link/asset/images/chapa_swirl.svg" />
-    <input type="hidden" name="callback_url" value="https://example.com/callbackurl" />
-    <input type="hidden" name="return_url" value="http://localhost:3000/congratulation" />
-    <input type="hidden" name="meta[title]" value="test" />
-    <button type="submit" className='  border-solid border-2xl border-slate-600 active:bg-slate-100' >Book Now ✨</button>
-</form>
+            className="w-full  bg-gradient-to-r from-blue-500 to-slate-700 hover:from-blue-600 hover:to-slate-800  text-white px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+           >
+              {t('BookNow')} ✨
           </button>
    
     {/* </Link> */}

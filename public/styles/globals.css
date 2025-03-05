@@ -19,3 +19,30 @@ html ,body  {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+.slideTrack {
+  display: flex;
+  width: 800%; /* Set width to double the slides, as we have 7 slides duplicated */
+  animation: marquee 20s linear infinite; /* Smooth continuous animation */
+  overflow: hidden;
+  white-space: nowrap;
+  position: relative;
+  height: 150px;
+}
+
+.slides {
+  flex: 0 0 auto;
+  width: 300px; /* Fixed width for each slide */
+  margin-right: 16px;
+  scroll-snap-align: start;
+  height: 150px;
+}
+
+/* Keyframes for seamless infinite loop */
+@keyframes marquee {
+  0% {
+    transform: translateX(0); /* Start from the beginning */
+  }
+  100% {
+    transform: translateX(-100%); /* Move by the total width of the container */
+  }
+}
